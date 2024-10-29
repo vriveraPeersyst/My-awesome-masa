@@ -41,9 +41,29 @@ def fetch_tweets(config):
 
     # Lista de cuentas de Twitter de los equipos de La Liga 2024-2025
     accounts = [
-    
-    
-   
+        'Alaves',
+        'Atleti',
+        'Osasuna',
+        'FCBarcelona',
+        'GironaFC',
+        'Osasuna',
+        'RCCelta',
+        'RCD_Mallorca',
+        'realmadrid',
+        'realvalladolid',
+        'UDLP_Oficial',
+        'VillarrealCF',
+        'AthleticClub',
+        'Cadiz_CF',
+        'CDLeganes',
+        'GetafeCF',
+        'GranadaCF',
+        'RayoVallecano',
+        'RCDEspanyol',
+        'RealBetis',
+        'RealSociedad',
+        'SevillaFC',
+        'valenciacf'
     ]
 
     for account in accounts:
