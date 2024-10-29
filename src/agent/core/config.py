@@ -11,5 +11,5 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 # URLs for data loading
 # TODO: Extend to other data types, Web, Discord, Telegram, YouTube, and Podcast
 DATA_URLS = [
-    "data/twitter_data/traderxo.json",
+    "data/all_matches.json",
 ]
