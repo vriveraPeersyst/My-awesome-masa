@@ -11,7 +11,7 @@ tweets_per_request: 30
 
 # Add start_date and end_date
 start_date: '2024-08-10'
-end_date: '2024-10-29'
+end_date: '2024-10-30'
 days_per_iteration: 2
 
 # File settings
