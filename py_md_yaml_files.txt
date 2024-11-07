@@ -1,0 +1,1387 @@
+--- File: ./README.md ---
+# 🌟 Awesome Masa
+
+A curated collection of datasets, tools, and agents for AI developers using the Masa protocol.
+
+[Masa Protocol](https://github.com/masa-finance/masa-oracle)
+
+## 🚀 Quick Start
+
+1. Ensure you have Conda installed.
+2. Create the environment:
+
+   ```bash
+   conda env create -f environment.yml
+   conda activate awesome-masa
+   ```
+
+3. Set up environment variables:
+   - Copy `env.example` to `.env`
+   - Fill in the required values
+
+## 📚 Contents
+
+### [Datasets](#datasets)
+
+### [Scrapers](#scrapers)
+
+### [Agents](#agents)
+
+### [Contribution](#contribution)
+
+### [License](#license)
+
+## 📊 Datasets
+
+Our repository includes various datasets scraped and processed using the Masa Protocol:
+
+### 🐦 Twitter Data
+
+Scraped tweets related to various topics, including memecoin discussions.
+
+*For more details, check out the [datasets README](datasets/README.md).*
+
+### 🎙️ Podcast Data
+
+- **Diarized Transcripts**: Podcast episodes with speaker identification and timestamps.
+- **Examples**: Bankless, Huberman Lab, Laura Shin, Real Vision, The Mint Condition
+
+### 💬 Discord Data
+
+- **Channel Data**: Messages from Discord channels, including user information and timestamps.
+- **Examples**: Guild: Masa, Channel ID: 1217114388373311640
+
+This dataset contains community conversations related to Masa.
+
+### 📺 YouTube Data
+
+A collection of YouTube video transcripts, diarized with speaker labels.
+
+## 🕷️ Scrapers
+
+We provide several scraper libraries to collect data from different sources using the Masa Protocol:
+
+- **Tweet Fetcher**: Retrieve tweets from specified Twitter accounts.
+- **Discord Scraper**: Fetch and save messages from Discord channels.
+
+*For usage instructions, refer to the respective README files in the `scrapers` directory.*
+
+## 🤖 Agents
+
+We provide example code for simple RAG (Retrieval-Augmented Generation) agents using our datasets. These agents demonstrate how to leverage the Masa protocol's structured data in AI applications.
+
+### Example RAG Agent
+
+Our example RAG agent showcases:
+
+- Loading and preprocessing Masa datasets
+- Implementing vector search for relevant context retrieval
+- Integrating retrieved context with a language model for enhanced responses
+
+*For the full implementation, see the [RAG example agent](agents/rag_example.py) file.*
+
+## 🤝 Contribution
+
+We welcome contributions! If you have a dataset, tool, or agent that fits well with our collection, feel free to submit a pull request or open an issue.
+
+For more information on using these datasets or contributing, please refer to the documentation or contact us directly.
+
+## 📄 License
+
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
+
+---
+
+### *Made with ❤️ by the Masa Foundation*
+
+
+--- File: ./scrapers/__init__.py ---
+
+
+--- File: ./scrapers/tweets/README.md ---
+# Getting Started with the Tweet Fetcher
+
+## Introduction
+The Tweet Fetcher is a Python script designed for developers to fetch tweets from a specified Twitter account within a given date range. This README provides instructions on setting up and using the Tweet Fetcher.
+
+## Prerequisites
+- Conda installed on your system.
+- An environment set up using the provided `environment.yml` file. To set up the environment, run:
+  ```bash
+  conda env create -f environment.yml
+  ```
+  Activate the environment with:
+  ```bash
+  conda activate awesome-masa
+  ```
+
+## Configuration
+Before running the script, you need to configure it to specify the API endpoint, query parameters, and other settings.
+
+1. **API Settings**: Specify the API endpoint and headers for the request.
+2. **Query Settings**: Define the query for fetching tweets, including the Twitter account and the number of tweets per request.
+3. **Date Range**: Set the `start_date` and `end_date` for the period from which you want to fetch tweets.
+4. **Iteration Settings**: Adjust `days_per_iteration` to control how many days' worth of tweets are fetched per iteration within the date range.
+5. **File and Logging Settings**: Specify the directory for saving fetched tweets and configure logging preferences.
+
+Refer to the configuration file section for more details:
+
+```1:25:examples/tweets/tweet_fetcher_config.yaml
+# API settings
+api_endpoint: 'http://localhost:8080/api/v1/data/twitter/tweets/recent'
+headers:
+  accept: 'application/json'
+  Content-Type: 'application/json'
+
+# Query settings
+query: 'from:milesdeutscher'
+tweets_per_request: 100
+
+# Add start_date and end_date
+start_date: '2023-07-24'
+end_date: '2024-07-24'
+days_per_iteration: 10
+
+# File settings
+data_directory: 'data'
+
+# Timing settings
+retry_delay: 960  # 16 minutes in seconds
+request_delay: 15  # 15 seconds between requests
+
+# Logging settings
+log_level: 'INFO'
+log_format: '%(asctime)s - %(levelname)s - %(message)s'
+```
+
+
+## Running the Script
+To fetch tweets, follow these steps:
+
+1. Navigate to the script's directory in your terminal.
+2. Run the script using Python:
+   ```bash
+   python tweet_fetcher.py
+   ```
+
+## How It Works
+The script performs the following steps:
+
+1. Loads the configuration from `tweet_fetcher_config.yaml`.
+2. Fetches tweets based on the specified query and date range.
+3. Saves the fetched tweets in the specified directory as a JSON file.
+
+Refer to the service module for more details on the functions used:
+
+```1:23:examples/tweets/tweet_service.py
+import json
+import logging
+import os
+import time
+from datetime import datetime
+
+def setup_logging(log_level, log_format):
+    numeric_level = getattr(logging, log_level.upper(), None)
+    if not isinstance(numeric_level, int):
+        raise ValueError(f'Invalid log level: {log_level}')
+    logging.basicConfig(level=numeric_level, format=log_format)
+
+def ensure_data_directory(directory):
+    os.makedirs(directory, exist_ok=True)
+
+def save_all_tweets(tweets, data_directory):
+    filename = f'{data_directory}/all_tweets_{datetime.now().strftime("%Y-%m-%d_%H-%M-%S")}.json'
+    with open(filename, 'w', encoding='utf-8') as file:
+        json.dump(tweets, file, ensure_ascii=False, indent=2)
+    logging.info(f"All tweets saved to {filename}")
+
+def create_tweet_query(hashtag, start_date, end_date):
+    return f"({hashtag} until:{end_date.strftime('%Y-%m-%d')} since:{start_date.strftime('%Y-%m-%d')})"
+```
+
+
+## Output
+The fetched tweets are saved in the `data_directory` specified in the configuration file. Each file is named with a timestamp to ensure uniqueness.
+
+## Logging
+The script logs its progress and any errors encountered during execution. You can adjust the log level and format in the configuration file to suit your needs.
+
+## Customization
+You can customize the script by modifying the configuration file or extending the Python scripts to add new functionality or adjust existing features.
+
+For any issues or further assistance, please refer to the inline documentation within the codebase.
+
+--- File: ./scrapers/tweets/tweet_service.py ---
+import json
+import logging
+import os
+import time
+from datetime import datetime
+
+def setup_logging(log_level, log_format):
+    numeric_level = getattr(logging, log_level.upper(), None)
+    if not isinstance(numeric_level, int):
+        raise ValueError(f'Invalid log level: {log_level}')
+    logging.basicConfig(level=numeric_level, format=log_format)
+
+def ensure_data_directory(directory):
+    os.makedirs(directory, exist_ok=True)
+
+def save_all_tweets(tweets, data_directory, query):
+    query_target = query.split(':')[1].rstrip(')')
+    filename = f'{data_directory}/{query_target}_{datetime.now().strftime("%Y-%m-%d_%H-%M-%S")}.json'
+    with open(filename, 'w', encoding='utf-8') as file:
+        json.dump(tweets, file, ensure_ascii=False, indent=2)
+    logging.info(f"All tweets saved to {filename}")
+
+def create_tweet_query(account, start_date, end_date):
+    return f"(from:{account} until:{end_date.strftime('%Y-%m-%d')} since:{start_date.strftime('%Y-%m-%d')})"
+
+
+--- File: ./scrapers/tweets/tweet_fetcher.py ---
+import requests
+import os
+import yaml
+from datetime import datetime, timedelta
+from dotenv import load_dotenv
+import time
+import logging
+import json
+from tweet_service import setup_logging, ensure_data_directory, save_all_tweets, create_tweet_query
+
+def load_config():
+    dir_path = os.path.dirname(os.path.realpath(__file__))
+    config_path = os.path.join(dir_path, 'tweet_fetcher_config.yaml')
+    with open(config_path, 'r') as file:
+        return yaml.safe_load(file)
+
+def save_state(state, api_calls_count, records_fetched, all_tweets):
+    state_data = {
+        'last_known_state': state,
+        'api_calls_count': api_calls_count,
+        'records_fetched': records_fetched,
+        'all_tweets_sample': all_tweets[:7]  # Guarda una muestra de los primeros 10 tweets para visibilidad
+    }
+    with open('last_known_state_detailed.json', 'w') as f:
+        json.dump(state_data, f, indent=4)
+
+def load_state():
+    try:
+        with open('last_known_state_detailed.json', 'r') as f:
+            return json.load(f).get('last_known_state', {})
+    except (FileNotFoundError, json.JSONDecodeError):
+        return {}
+
+def exponential_backoff(attempt, base=60):
+    return base * (2 ** attempt)  # Backoff exponencial: retraso base * 2^intento
+
+def fetch_tweets(config):
+    start_date = datetime.strptime(config['start_date'], '%Y-%m-%d').date()
+    end_date = datetime.strptime(config['end_date'], '%Y-%m-%d').date()
+    days_per_iteration = config['days_per_iteration']
+
+    # Lista de cuentas de Twitter de los equipos de La Liga 2024-2025
+    accounts = [
+        'Alaves',
+        'Atleti',
+        'Osasuna',
+        'FCBarcelona',
+        'GironaFC',
+        'RCCelta',
+        'RCD_Mallorca',
+        'realmadrid',
+        'realvalladolid',
+        'UDLP_Oficial',
+        'VillarrealCF',
+        'AthleticClub',
+        'CDLeganes',
+        'GetafeCF',
+        'RayoVallecano',
+        'RCDEspanyol',
+        'RealBetis',
+        'RealSociedad',
+        'SevillaFC',
+        'valenciacf'
+    ]
+
+    for account in accounts:
+        logging.info(f"Fetching tweets for account: {account}")
+        current_date = end_date
+
+        # Crear un directorio de datos para cada cuenta
+        account_data_directory = os.path.join(config['data_directory'], account)
+        ensure_data_directory(account_data_directory)
+
+        api_calls_count = 0
+        records_fetched = 0
+        all_tweets = []
+
+        while current_date >= start_date:
+            success = False
+            attempts = 0
+
+            while not success and attempts < config['max_retries']:
+                iteration_start_date = current_date - timedelta(days=days_per_iteration)
+                day_before = max(iteration_start_date, start_date - timedelta(days=1))
+
+                # Crear el query para la cuenta actual
+                query = create_tweet_query(account, day_before, current_date)
+                print(query)
+                request_body = {"query": query, "count": config['tweets_per_request']}
+
+                try:
+                    response = requests.post(
+                        config['api_endpoint'],
+                        json=request_body,
+                        headers=config['headers'],
+                        timeout=config['request_timeout']
+                    )
+                    api_calls_count += 1
+
+                    if response.status_code == 200:
+                        response_data = response.json()
+                        if response_data and 'data' in response_data and response_data['data'] is not None:
+                            tweets = response_data['data']
+                            all_tweets.extend(tweets)
+                            num_tweets = len(tweets)
+                            records_fetched += num_tweets
+                            logging.info(f"Fetched {num_tweets} tweets for {account} from {day_before} to {current_date}.")
+                            success = True
+                        else:
+                            logging.warning(f"No tweets fetched for {account} from {day_before} to {current_date}. Retrying after delay...")
+                            time.sleep(config['request_delay'])
+                            attempts += 1
+                    elif response.status_code == 429 or response.status_code == 500:
+                        if response.status_code == 429:
+                            logging.warning("Rate-limited. Retrying after delay...")
+                            time.sleep(exponential_backoff(attempts, base=config['retry_delay']))
+                            attempts += 1
+                        elif response.status_code == 500:
+                            logging.warning("500 Error. Retrying after delay...")
+                            time.sleep(exponential_backoff(attempts, base=config['request_delay']))
+                            attempts += 1
+                    else:
+                        logging.error(f"Failed to fetch tweets: {response.status_code}")
+                        break
+
+                except requests.exceptions.RequestException as e:
+                    logging.error(f"Request failed: {e}")
+                    time.sleep(exponential_backoff(attempts, base=config['retry_delay']))
+                    attempts += 1
+
+            if not success:
+                logging.error(f"Failed after {attempts} attempts for {account} from {day_before} to {current_date}")
+
+            # Guardar el estado si es necesario
+            save_state({'current_date': current_date.strftime('%Y-%m-%d'), 'account': account}, api_calls_count, records_fetched, all_tweets)
+            current_date -= timedelta(days=days_per_iteration)
+            time.sleep(config['request_delay'])
+
+        # Guardar todos los tweets de la cuenta actual
+        save_all_tweets(all_tweets, account_data_directory, f"from:{account}")
+
+        logging.info(f"Finished fetching tweets for account: {account}. Total API calls: {api_calls_count}. Total records fetched: {records_fetched}")
+
+if __name__ == "__main__":
+    load_dotenv()
+    config = load_config()
+    setup_logging(config['log_level'], config['log_format'])
+    fetch_tweets(config)
+
+--- File: ./scrapers/tweets/tweet_fetcher_config.yaml ---
+# API settings
+#api_endpoint: 'http://localhost:8080/api/v1/data/twitter/tweets/recent'
+api_endpoint: 'http://localhost:8080/api/v1/data/twitter/tweets/recent'
+headers:
+  accept: 'application/json'
+  Content-Type: 'application/json'
+
+# Query settings
+#query: '(from: )'
+tweets_per_request: 30
+
+# Add start_date and end_date
+start_date: '2024-08-10'
+end_date: '2024-10-30'
+days_per_iteration: 2
+
+# File settings
+data_directory: 'data/LaLigaEquipos'
+
+# Timing settings
+retry_delay: 1111  # 16 minutes in seconds
+request_delay: 33  # 15 seconds between requests
+
+# Logging settings
+log_level: 'INFO'
+log_format: '%(asctime)s - %(levelname)s - %(message)s'
+
+
+# NEW
+max_retries: 33
+request_timeout: 60
+
+--- File: ./src/__init__.py ---
+from . import agent
+
+--- File: ./src/la-liga-agent.py/__init__.py ---
+from . import agent
+
+--- File: ./src/la-liga-agent.py/streamlit_app.py ---
+
+import sys
+import os
+import logging
+import time
+import streamlit as st
+from streamlit_extras.add_vertical_space import add_vertical_space
+from dotenv import load_dotenv
+
+st.set_page_config(page_title="💬 La Kiniela Chat", page_icon="💬")
+
+# Load environment variables
+load_dotenv()
+
+# Configure logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+
+current_dir = os.path.dirname(os.path.abspath(__file__))
+parent_dir = os.path.dirname(current_dir)
+project_root = os.path.dirname(parent_dir)
+sys.path.append(project_root)
+
+from src.agent import rag_agent
+
+# Initialize the agent only once per session
+@st.cache_resource
+def initialize_agent_cached():
+    return rag_agent.initialize_agent()
+
+# Use the cached agent initialization
+graph = initialize_agent_cached()
+
+def get_streaming_rag_response(question: str):
+    logging.info(f"Generating response for question: {question}")
+
+    # Construct conversation history
+    history = ""
+    for msg in st.session_state['message_history']:
+        role = "Usuario" if msg["role"] == "user" else "Asistente"
+        content = msg["content"]
+        history += f"{role}: {content}\n"
+
+    response, steps = rag_agent.get_rag_response(graph, question, history)
+    
+    words = response.split()
+    for word in words:
+        yield word + " "
+        time.sleep(0.05)
+
+st.title("💬 La Kiniela Chat")
+
+st.markdown("""
+Welcome to la Kiniela Chat!
+        
+Soy un asistente especializado en LaLiga. Puedo ayudarte a resolver tus dudas sobre equipos, partidos, jornadas y cualquier dato relevante. Además, puedo analizar tweets para proporcionar contexto adicional sobre situaciones recientes. Los datos sobre los equipos, partidos y jornadas los tengo cargados en mi base de datos, por lo que puedo responder de manera clara y concisa a tus consultas. ¿Sobre qué equipo, partido o tema te gustaría obtener más información?
+""")
+
+st.markdown("---")
+
+if 'message_history' not in st.session_state:
+    st.session_state['message_history'] = []
+
+def display_chat_history():
+    for msg in st.session_state['message_history']:
+        with st.chat_message(msg["role"]):
+            st.markdown(msg["content"])
+
+display_chat_history()
+
+if prompt := st.chat_input("Escribe tu pregunta:"):
+    st.session_state.message_history.append({"role": "user", "content": prompt})
+    with st.chat_message("user"):
+        st.markdown(prompt)
+
+    with st.chat_message("assistant"):
+        message_placeholder = st.empty()
+        full_response = ""
+        
+        # Display thinking animation
+        thinking_placeholder = st.empty()
+        with thinking_placeholder:
+            for i in range(3):
+                for dot in [".", "..", "..."]:
+                    thinking_placeholder.markdown(f"Pensando{dot}")
+                    time.sleep(0.3)
+        
+        # Start streaming the response
+        for chunk in get_streaming_rag_response(prompt):
+            thinking_placeholder.empty()  # Remove thinking animation
+            full_response += chunk
+            message_placeholder.markdown(full_response + "▌")
+        message_placeholder.markdown(full_response)
+
+    st.session_state.message_history.append({"role": "assistant", "content": full_response})
+
+add_vertical_space(5)
+
+
+
+--- File: ./src/agent/agent.py ---
+import os
+import json
+import logging
+from typing import List, Optional
+from pydantic import BaseModel, Field
+from langgraph.graph import StateGraph, START, END
+from langgraph.graph.message import add_messages
+from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain.prompts import PromptTemplate
+from langchain_huggingface import HuggingFaceEmbeddings
+from langchain_community.vectorstores import FAISS
+from langchain.schema import Document
+os.environ["TOKENIZERS_PARALLELISM"] = "false"
+
+# Configure logging
+#logging.basicConfig(level=logging.INFO)
+
+# Define the state
+class GraphState(BaseModel):
+    messages: List[dict] = Field(default_factory=list)
+    prompt: str = ""
+    retrieved_docs: List[Document] = Field(default_factory=list)
+    generation: str = ""
+    steps: List[str] = Field(default_factory=list)
+    iterations: int = 0
+
+    """Represents the state of the graph.
+
+    Attributes:
+        doc (Document): The document associated with the state.
+    """
+    doc: Optional[Document] = None
+
+    class Config:
+        """Pydantic configuration for the GraphState model."""
+        arbitrary_types_allowed = True
+
+# Agent class for retrieval
+class RetrieveAgent:
+    def __init__(self, retriever):
+        self.retriever = retriever
+
+    def __call__(self, state: GraphState):
+        logging.info("Retrieving relevant documents...")
+        question = state.prompt
+        retrieved_docs = self.retriever.invoke(question)
+        state.retrieved_docs = retrieved_docs
+        state.steps.append("retrieved_docs")
+        return state
+
+# Agent class for generating response
+class GenerateAgent:
+    def __init__(self, env):
+        self.env = env
+        self.prompt_template = self.create_prompt_template()
+
+    def create_prompt_template(self):
+        """Sets up the prompt template for generating responses."""
+        prompt = PromptTemplate(
+            template="""You are an AI assistant specializing in analyzing and summarizing Twitter conversations about trading and cryptocurrency based on KOL tweet streams from the author's twitter replies. Your task is to provide concise, informative answers based on the given tweet data and my questions. It's currently July 28th 2024, so make sure you are getting data that is relevant to that date.
+
+Guidelines:
+1. Focus on extracting key information from the tweets, such as trading strategies, price movements, or market sentiment.
+2. If the tweet mentions specific cryptocurrencies, trading pairs, or price levels, highlight these in your answer.
+3. Provide context about the author's perspective or sentiment if relevant.
+4. If the question asks about something not directly addressed in the tweets, say so, but offer a relevant insight from the available data if possible.
+5. Keep your answer concise, vary your response between three to eight sentences, and use the system memory to improve your response from our previous chats. Do not use "Based on..." to start every response; be creative in your speech.
+
+Relevant Tweet Data:
+{data}""",
+            input_variables=["data"],
+        )
+        return prompt
+
+    def __call__(self, state: GraphState):
+        """Generates a response based on the current state."""
+        logging.info("Generating response...")
+        question = state.prompt
+        data_texts = "\n".join([doc.page_content for doc in state.retrieved_docs])
+
+        # Prepare the prompt using the template
+        prompt = self.prompt_template.format(data=data_texts)
+
+        # Get the conversation history
+        messages = self.env.list_messages()
+
+        # Add the detailed prompt as a system message
+        messages.append({"role": "system", "content": prompt})
+
+        # Add the user's question as a user message
+        messages.append({"role": "user", "content": question})
+
+        # Call the language model
+        response = self.env.completion(messages)
+        state.generation = response
+        state.steps.append("generated_answer")
+        return state
+
+def load_documents(file_path):
+    """Load documents from a JSON file."""
+    try:
+        with open(file_path, 'r') as file:
+            tweet_data = json.load(file)
+        docs = []
+        for tweet_entry in tweet_data:
+            if tweet_entry.get('Error') is None and 'Tweet' in tweet_entry:
+                tweet = tweet_entry['Tweet']
+                tweet_text = f"[Author: {tweet['Username']}] {tweet['Text']}"
+                docs.append(Document(page_content=tweet_text))
+        # Split documents
+        text_splitter = RecursiveCharacterTextSplitter(chunk_size=250, chunk_overlap=0)
+        split_docs = []
+        for doc in docs:
+            splits = text_splitter.split_text(doc.page_content)
+            for split in splits:
+                split_docs.append(Document(page_content=split))
+        return split_docs
+    except Exception as e:
+        logging.error(f"Error loading tweets: {e}")
+        return []
+
+def create_vectorstore_and_retriever(documents):
+    """
+    Create vector store and retriever.
+
+    :param documents: The list of documents.
+    :type documents: List[Document]
+    :return: The retriever object.
+    :rtype: Retrieval
+    """
+    # Define tokenizer arguments to avoid the warning
+    tokenizer_kwargs = {
+        'clean_up_tokenization_spaces': True
+    }
+
+    # Initialize embeddings with tokenizer arguments
+    embeddings = HuggingFaceEmbeddings(
+        model_name="all-MiniLM-L6-v2",
+        model_kwargs={
+            'tokenizer_kwargs': tokenizer_kwargs
+        }
+    )
+    vectorstore = FAISS.from_documents(documents, embeddings)
+    retriever = vectorstore.as_retriever(k=4)
+    return retriever
+
+
+# Define the main function
+def main(env):
+    """Main function to run the agent."""
+    # Initialize the agent only once
+    if not hasattr(main, "agent_initialized"):
+        main.agent_initialized = True
+        # Load and prepare data
+        data_path = "data/twitter_data/memecoin_tweets.json"
+        documents = load_documents(data_path)
+        retriever = create_vectorstore_and_retriever(documents)
+        # Assign agents
+        main.retrieve_agent = RetrieveAgent(retriever)
+        main.generate_agent = GenerateAgent(env)
+        # Compile the graph
+        graph_builder = StateGraph(GraphState)
+        graph_builder.add_node("retrieve", main.retrieve_agent)
+        graph_builder.add_node("generate", main.generate_agent)
+        graph_builder.add_edge(START, "retrieve")
+        graph_builder.add_edge("retrieve", "generate")
+        graph_builder.add_edge("generate", END)
+        main.graph = graph_builder.compile()
+
+    messages = env.list_messages()
+    next_actor = env.get_next_actor()
+
+    if not messages:
+        # No previous messages, initialize conversation
+        env.set_next_actor("user")
+        env.request_user_input()
+        return
+
+    if next_actor == "user":
+        # After the user inputs a message, set next_actor to 'agent'
+        env.set_next_actor("agent")
+    elif next_actor == "agent":
+        last_message = messages[-1]
+        if last_message['role'] == 'user':
+            question = last_message['content']
+            initial_state = GraphState(prompt=question)
+            # Invoke the graph and get the result
+            result = main.graph.invoke(initial_state)
+            agent_response = result['generation']
+            # Add the agent's response to the environment
+            env.add_message("agent", agent_response)
+            env.set_next_actor("user")
+    else:
+        # Default behavior: request user input
+        env.set_next_actor("user")
+        env.request_user_input()
+        return
+
+    # Request user input if it's the user's turn
+    if env.get_next_actor() == "user":
+        env.request_user_input()
+
+
+# Entry point for the agent
+if __name__ == "__main__":
+    main(env)
+
+--- File: ./src/agent/evaluation/evaluation.py ---
+from langchain import hub
+from langchain_openai import ChatOpenAI
+
+grade_prompt_answer_accuracy = hub.pull("langchain-ai/rag-answer-vs-reference")
+
+def answer_evaluator(run, example) -> dict:
+    """
+    A simple evaluator for RAG answer accuracy
+    """
+    input_question = example.inputs["input"]
+    reference = example.outputs["output"]
+    prediction = run.outputs["response"]
+
+    llm = ChatOpenAI(model="gpt-4", temperature=0)
+    answer_grader = grade_prompt_answer_accuracy | llm
+
+    score = answer_grader.invoke(
+        {
+            "question": input_question,
+            "correct_answer": reference,
+            "student_answer": prediction,
+        }
+    )
+    score = score["Score"]
+    return {"key": "answer_v_reference_score", "score": score}
+
+def check_trajectory_custom(root_run, example) -> dict:
+    """
+    Check if all expected tools are called in exact order and without any additional tool calls.
+    """
+    expected_trajectory_1 = [
+        "retrieve_data",
+        "grade_data_retrieval",
+        "web_search",
+        "generate_answer",
+    ]
+    expected_trajectory_2 = [
+        "retrieve_data",
+        "grade_data_retrieval",
+        "generate_answer",
+    ]
+
+    tool_calls = root_run.outputs["steps"]
+    print(f"Tool calls custom agent: {tool_calls}")
+    if tool_calls == expected_trajectory_1 or tool_calls == expected_trajectory_2:
+        score = 1
+    else:
+        score = 0
+
+    return {"score": int(score), "key": "tool_calls_in_exact_order"}
+
+--- File: ./src/agent/__init__.py ---
+from .rag_agent import get_rag_response
+
+--- File: ./src/agent/utils.py ---
+
+import re
+import unicodedata
+from src.agent.data.team_mappings import TEAM_NAME_MAPPINGS
+
+def normalize_text(text):
+    # Remove accents and convert to lowercase
+    text = ''.join(
+        c for c in unicodedata.normalize('NFD', text)
+        if unicodedata.category(c) != 'Mn'
+    )
+    return text.lower()
+
+def extract_team_names(question, history):
+    question_normalized = normalize_text(question)
+    history_normalized = normalize_text(history)
+    combined_text = question_normalized + " " + history_normalized
+    mentioned_teams = set()
+
+    for folder_name, name_variations in TEAM_NAME_MAPPINGS.items():
+        for name in name_variations:
+            name_normalized = normalize_text(name)
+            # Use word boundaries to avoid partial matches
+            pattern = r'\b' + re.escape(name_normalized) + r'\b'
+            if re.search(pattern, combined_text):
+                mentioned_teams.add(folder_name)
+                break  # Stop checking other variations for this team
+
+    return list(mentioned_teams)
+
+
+--- File: ./src/agent/search_tools/search_tools.py ---
+from langchain_community.tools.tavily_search import TavilySearchResults
+
+def get_web_search_tool():
+    return TavilySearchResults()
+
+--- File: ./src/agent/TWITTER.md ---
+1. Starting point: JSON file (`data/tweets.json`)
+```json
+[
+  {
+    "ConversationID": "1775858583231439117",
+    "Username": "Trader_XO",
+    "Text": "@MaxController Got cut at $5 \n\nBought back in at $1 and sold again at 1.90",
+    // ... other fields ...
+  },
+  {
+    "ConversationID": "1815797777462616202",
+    "Username": "Trader_XO",
+    "Text": "@TraderMagus Grifters are efficient that much I can tell you for free \n\nParticularly the ones who have found their balls again after a 15k move up off the lows",
+    // ... other fields ...
+  }
+]
+```
+
+2. After `load_and_process_tweets` in `tweet_preprocessor.py`
+```python
+processed_tweets = [
+    "[Author: Trader_XO] @MaxController Got cut at $5 \n\nBought back in at $1 and sold again at 1.90",
+    "[Author: Trader_XO] @TraderMagus Grifters are efficient that much I can tell you for free \n\nParticularly the ones who have found their balls again after a 15k move up off the lows"
+]
+```
+
+3. In `load_documents` after combining tweets (`combined_text`)
+```python
+combined_text = """[Author: Trader_XO] @MaxController Got cut at $5 \n\nBought back in at $1 and sold again at 1.90
+[Author: Trader_XO] @TraderMagus Grifters are efficient that much I can tell you for free \n\nParticularly the ones who have found their balls again after a 15k move up off the lows"""
+```
+
+4. After text splitting in `load_documents` (`doc_splits`)
+```python
+doc_splits = [
+    "[Author: Trader_XO] @MaxController Got cut at $5 \n\nBought back in at $1 and sold again at 1.90",
+    "[Author: Trader_XO] @TraderMagus Grifters are efficient that much I can tell you for free \n\nParticularly the ones who have found their balls again after a 15k move up off the lows"
+]
+```
+Note: The actual splits might be different depending on the `chunk_size` and the length of the tweets.
+
+5. In `create_vectorstore_and_retriever`, after converting to Document objects
+```python
+documents = [
+    Document(page_content="[Author: Trader_XO] @MaxController Got cut at $5 \n\nBought back in at $1 and sold again at 1.90"),
+    Document(page_content="[Author: Trader_XO] @TraderMagus Grifters are efficient that much I can tell you for free \n\nParticularly the ones who have found their balls again after a 15k move up off the lows")
+]
+```
+
+6. After creating the vectorstore (not directly visible, but conceptually)
+The vectorstore will contain vector representations of each document. For example:
+```python
+vector_representations = [
+    [0.1, 0.2, 0.3, ..., 0.9],  # Vector for first document
+    [0.2, 0.4, 0.1, ..., 0.7]   # Vector for second document
+]
+```
+
+7. Final retriever object
+The retriever is a function that, when given a query, will return the most relevant documents. For example:
+```python
+query = "What happened with the $5 trade?"
+relevant_docs = retriever.get_relevant_documents(query)
+# Might return:
+# [Document(page_content="[Author: Trader_XO] @MaxController Got cut at $5 \n\nBought back in at $1 and sold again at 1.90")]
+```
+
+
+--- File: ./src/agent/data/data_management.py ---
+import logging
+from src.agent.data.data_loader import load_documents
+from src.agent.data.vector_store import create_vectorstore_and_retriever
+
+def load_and_prepare_data(file_paths):
+    logging.info("Loading data...")
+    data = load_documents(file_paths)
+    logging.info("Creating vectorstore and retriever...")
+    retriever = create_vectorstore_and_retriever(data)
+    return retriever
+
+--- File: ./src/agent/data/tweet_preprocessor.py ---
+# import json
+
+# def load_and_process_tweets(file_path):
+#     with open(file_path, 'r') as file:
+#         tweet_data = json.load(file)
+    
+#     processed_tweets = []
+#     for tweet_entry in tweet_data:
+#         if tweet_entry['Error'] is None and 'Tweet' in tweet_entry:
+#             tweet = tweet_entry['Tweet']
+#             # Annotate tweet text with the username to indicate the author explicitly.
+#             tweet_text = f"[Author: {tweet['Username']}] {tweet['Text']}"
+#             processed_tweets.append(tweet_text)
+    
+#     return processed_tweets
+
+
+
+import json
+import logging
+
+# src/agent/data/tweet_preprocessor.py
+
+def load_and_process_tweets(file_path):
+    with open(file_path, 'r') as file:
+        tweet_data = json.load(file)
+    
+    processed_tweets = []
+    for tweet_entry in tweet_data:
+        if tweet_entry['Error'] is None and 'Tweet' in tweet_entry:
+            tweet = tweet_entry['Tweet']
+            # Annotate tweet text with the username to indicate the author explicitly.
+            tweet_text = f"[Author: {tweet['Username']}] {tweet['Text']}"
+            processed_tweets.append(tweet_text)
+    
+    return processed_tweets
+
+
+def process_tweets(tweet_data):
+    processed_tweets = []
+    for tweet_entry in tweet_data:
+        if tweet_entry['Error'] is None and 'Tweet' in tweet_entry:
+            tweet = tweet_entry['Tweet']
+            # Annotate tweet text with the username to indicate the author explicitly.
+            tweet_text = f"[Author: {tweet['Username']}] {tweet['Text']}"
+            processed_tweets.append(tweet_text)
+    
+    return processed_tweets
+
+def process_matches(match_data):
+    processed_matches = []
+    
+    # Loop through each matchday and match
+    for matchday, matches in match_data.items():
+        for match in matches:
+            area = match['area']['name']
+            competition = match['competition']['name']
+            season_start = match['season']['startDate']
+            season_end = match['season']['endDate']
+            match_date = match['utcDate']
+            status = match['status']
+            matchday_number = match['matchday']
+            stage = match['stage']
+            last_updated = match['lastUpdated']
+            home_team = match['homeTeam']['name']
+            away_team = match['awayTeam']['name']
+            home_score = match['score']['fullTime']['home']
+            away_score = match['score']['fullTime']['away']
+            half_time_home = match['score']['halfTime']['home']
+            half_time_away = match['score']['halfTime']['away']
+            winner = match['score']['winner']
+            duration = match['score']['duration']
+            
+            # Check for odds message if available
+            odds_msg = match['odds']['msg'] if 'odds' in match else "No odds available"
+            
+            # Referee information
+            referees = ', '.join([ref['name'] for ref in match['referees']]) if match['referees'] else "No referees"
+
+            # Format the result
+            match_info = (f"Matchday {matchday_number}, {stage}, {competition}, {area}\n"
+                          f"Date: {match_date} | Status: {status} | Last updated: {last_updated}\n"
+                          f"Season: {season_start} - {season_end}\n"
+                          f"{home_team} {home_score} - {away_score} {away_team}\n"
+                          f"Half-time score: {home_team} {half_time_home} - {half_time_away} {away_team}\n"
+                          f"Winner: {winner} | Duration: {duration}\n"
+                          f"Referees: {referees}\n"
+                          f"Odds: {odds_msg}\n")
+            
+            processed_matches.append(match_info)
+    
+    return processed_matches
+
+
+
+--- File: ./src/agent/data/vector_store.py ---
+# src/agent/data/vector_store.py
+
+from langchain_community.vectorstores import Annoy
+from langchain_huggingface.embeddings import HuggingFaceEmbeddings
+from langchain.schema import Document
+import logging
+
+def create_vectorstore_and_retriever(data):
+    if not data:
+        logging.error("No data provided to create vector store.")
+        raise ValueError("No data provided to create vector store.")
+    logging.info(f"Creating vector store with {len(data)} documents.")
+
+    # Convert text to Document objects
+    documents = [Document(page_content=text) for text in data]
+
+    # Use a multilingual embeddings model suitable for Spanish
+    embeddings = HuggingFaceEmbeddings(
+        model_name="sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
+    )
+
+    # Pass the embeddings instance directly
+    vectorstore = Annoy.from_documents(
+        documents=documents,
+        embedding=embeddings,
+        n_trees=20
+    )
+
+    retriever = vectorstore.as_retriever(k=10)
+    return retriever
+
+
+
+
+
+# # src/data_processing/vector_store.py
+# from langchain.vectorstores import FAISS
+# from langchain.embeddings import OpenAIEmbeddings
+# import os
+
+# def create_vector_store(processed_data_dir):
+#     texts = []
+#     for filename in os.listdir(processed_data_dir):
+#         with open(os.path.join(processed_data_dir, filename), 'r') as file:
+#             texts.append(file.read())
+
+#     embeddings = OpenAIEmbeddings()
+#     vectorstore = FAISS.from_texts(texts, embeddings)
+#     vectorstore.save_local('data/vectorstores/faiss_index')
+#     return vectorstore
+
+# # Usage
+# vectorstore = create_vector_store('data/processed/')
+
+# # src/agents/retriever_agent.py
+# from langchain.vectorstores import FAISS
+
+# def get_retriever(vectorstore_path):
+#     vectorstore = FAISS.load_local(vectorstore_path)
+#     retriever = vectorstore.as_retriever(search_type="similarity", k=5)
+#     return retriever
+
+# # Usage
+# retriever = get_retriever('data/vectorstores/faiss_index')
+
+
+
+--- File: ./src/agent/data/data_loader.py ---
+# src/agent/data/data_loader.py
+
+import os
+import logging
+from langchain.text_splitter import RecursiveCharacterTextSplitter
+from src.agent.data.tweet_preprocessor import load_and_process_tweets
+
+def load_documents(team_folders):
+    docs = []
+    for team_folder in team_folders:
+        folder_path = os.path.join('data', 'LaLigaEquipos', team_folder)
+        if os.path.isdir(folder_path):
+            logging.info(f"Loading data from {folder_path}")
+            file_count = 0
+            for root, dirs, files in os.walk(folder_path):
+                for file in files:
+                    if file.endswith('.json'):
+                        file_count += 1
+                        full_path = os.path.join(root, file)
+                        logging.info(f"Processing file: {full_path}")
+                        tweets = load_and_process_tweets(full_path)
+                        docs.extend(tweets)
+            if file_count == 0:
+                logging.warning(f"No JSON files found in {folder_path}")
+        else:
+            logging.warning(f"Folder {folder_path} does not exist.")
+
+    if not docs:
+        logging.warning("No documents found for the specified team folders.")
+    else:
+        logging.info(f"Loaded {len(docs)} documents from team folders.")
+
+    # Text splitting
+    text_splitter = RecursiveCharacterTextSplitter.from_tiktoken_encoder(
+        chunk_size=250, chunk_overlap=0
+    )
+
+    # Join the list of tweets and split
+    combined_text = "\n".join(docs)
+    doc_splits = text_splitter.split_text(combined_text)
+    return doc_splits
+
+
+--- File: ./src/agent/data/team_mappings.py ---
+# src/agent/data/team_mappings.py
+
+TEAM_NAME_MAPPINGS = {
+    'Alaves': ['alaves', 'deportivo alaves', 'alavés'],
+    'Atleti': ['atletico', 'atleti', 'atlético', 'atlético de madrid', 'atletico madrid', 'atletico-madrid', 'atm'],
+    'CAOsasuna': ['osasuna', 'ca osasuna', 'osasuna pamplona'],
+    'FCBarcelona': ['barcelona', 'barça', 'fc barcelona', 'el barça', 'barca'],
+    'GironaFC': ['girona', 'girona fc'],
+    'Osasuna': ['osasuna', 'ca osasuna', 'osasuna pamplona'],
+    'RCCelta': ['celta', 'celta de vigo', 'rc celta', 'celta vigo', 'celta-vigo'],
+    'RCD_Mallorca': ['mallorca', 'rcd mallorca', 'real mallorca'],
+    'realmadrid': ['real madrid', 'madrid', 'el madrid', 'r madrid', 'real-madrid'],
+    'realvalladolid': ['real valladolid', 'valladolid', 'real valladolid cf'],
+    'UDLP_Oficial': ['las palmas', 'ud las palmas', 'laspalmas', 'las-palmas', 'udlp', 'udlp oficial'],
+    'VillarrealCF': ['villarreal', 'villarreal cf', 'villa-real', 'villa real'],
+    'AthleticClub': ['athletic bilbao', 'athletic club', 'athletic', 'bilbao', 'athletic club bilbao'],
+    'Cadiz_CF': ['cadiz', 'cádiz', 'cadiz cf', 'cádiz cf'],
+    'CDLeganes': ['leganes', 'cd leganes', 'cd leganés', 'leganés'],
+    'GetafeCF': ['getafe', 'getafe cf'],
+    'GranadaCF': ['granada', 'granada cf'],
+    'RayoVallecano': ['rayo vallecano', 'rayo', 'rayo-vallecano'],
+    'RCDEspanyol': ['espanyol', 'rcd espanyol', 'espanyol barcelona', 'español'],
+    'RealBetis': ['real betis', 'betis', 'real betis balompié', 'betis sevilla', 'real-betis'],
+    'RealSociedad': ['real sociedad', 'la real', 'r. sociedad', 'real-sociedad'],
+    'SevillaFC': ['sevilla', 'sevilla fc'],
+    'valenciacf': ['valencia', 'valencia cf'],
+}
+
+
+--- File: ./src/agent/graph/graph_state.py ---
+from typing import List, TypedDict
+import logging
+
+class GraphState(TypedDict):
+    question: str
+    history: str
+    generation: str
+    search: str
+    data: List[str]
+    steps: List[str]
+
+def retrieve(state):
+    retriever = state.get("retriever")
+    if not retriever:
+        logging.error("No retriever provided in state.")
+        return state  # Handle the error as appropriate
+
+    logging.info(f"Retrieving data for question: {state['question']}")
+
+    question = state["question"]
+    retrieved_docs = retriever.get_relevant_documents(question)
+    data = [doc.page_content for doc in retrieved_docs]
+    steps = state["steps"]
+    steps.append("retrieve_data")
+    return {
+        "data": data,
+        "question": question,
+        "history": state.get("history", ""),
+        "steps": steps,
+        "retriever": retriever
+    }
+def generate(state):
+    from src.agent.rag_agent import rag_chain
+    logging.info(f"Generating answer for question: {state['question']}")
+    question = state["question"]
+    data = state.get("data", [])
+    history = state.get("history", "")
+
+    # Ensure data is a list of strings
+    data_texts = []
+    for item in data:
+        if isinstance(item, dict):
+            # Extract text from the dictionary
+            # Adjust the key based on your web search result structure
+            text = item.get('snippet') or item.get('text') or item.get('content', '')
+            if text:
+                data_texts.append(text)
+        elif isinstance(item, str):
+            data_texts.append(item)
+        else:
+            logging.warning(f"Unexpected data type in data: {type(item)}")
+
+    data_text = "\n".join(data_texts)
+
+    # Prepare inputs for the chain
+    chain_inputs = {
+        "history": history,
+        "question": question,
+        "data": data_text
+    }
+
+    generation = rag_chain.invoke(chain_inputs)
+    steps = state["steps"]
+    steps.append("generate_answer")
+    return {
+        "data": data,
+        "question": question,
+        "history": history,
+        "generation": generation,
+        "steps": steps,
+        "retriever": state.get("retriever")  # Include retriever if needed
+    }
+
+def web_search(state):
+    from src.agent.rag_agent import web_search_tool
+    logging.info(f"Performing web search for question: {state['question']}")
+    question = state["question"]
+    data = state.get("data", [])
+    steps = state["steps"]
+    steps.append("web_search")
+    web_results = web_search_tool.invoke({"query": question})
+    data.extend(web_results)
+    return {"data": data, "question": question, "history": state.get("history", ""), "steps": steps}
+
+def decide_to_generate(state):
+    logging.info("Deciding whether to generate or search...")
+    data = state.get("data", [])
+    if not data:
+        logging.info("No data found, deciding to search.")
+        return "search"
+    else:
+        logging.info("Data found, deciding to generate.")
+        return "generate"
+
+
+
+--- File: ./src/agent/graph/graph_workflow.py ---
+import logging
+from langgraph.graph import StateGraph
+from src.agent.graph.graph_state import GraphState, retrieve, generate, web_search, decide_to_generate
+
+def setup_workflow():
+    logging.info("Setting up the workflow graph...")
+    workflow = StateGraph(GraphState)
+    workflow.add_node("retrieve", retrieve)
+    workflow.add_node("generate", generate)
+    workflow.add_node("web_search", web_search)
+
+    workflow.set_entry_point("retrieve")
+    workflow.add_conditional_edges(
+        "retrieve",
+        decide_to_generate,
+        {
+            "search": "web_search",
+            "generate": "generate",
+        },
+    )
+    workflow.add_edge("web_search", "generate")
+
+    graph = workflow.compile()
+    return graph
+
+--- File: ./src/agent/rag_agent.py ---
+# src/agent/rag_agent.py
+
+import os
+import logging
+from src.agent.data.data_loader import load_documents
+from src.agent.rag.rag_chain_setup import setup_rag_chain
+from src.agent.graph.graph_workflow import setup_workflow
+from src.agent.search_tools.search_tools import get_web_search_tool
+from src.agent.data.vector_store import create_vectorstore_and_retriever
+from src.agent.utils import extract_team_names
+
+# Global variables
+rag_chain = None
+web_search_tool = None
+
+def initialize_agent():
+    global rag_chain, web_search_tool
+    rag_chain = setup_rag_chain()
+    graph = setup_workflow()
+    web_search_tool = get_web_search_tool()
+    return graph
+
+def get_rag_response(graph, question: str, history: str):
+    logging.info(f"Generating response for question: {question}")
+
+    # Extract team names from the question
+    team_folders = extract_team_names(question, history)
+    if not team_folders:
+        logging.info("No team names found in question. Loading all data.")
+        # Optionally, load all teams or handle differently
+        team_folders = os.listdir('data/LaLigaEquipos')  # Load all teams
+    else:
+        logging.info(f"Found team folders: {team_folders}")
+
+    # Load documents from relevant team folders
+    data = load_documents(team_folders)
+    if not data:
+        logging.warning("No data loaded. Proceeding without data.")
+        data = []
+
+    # Create vectorstore and retriever
+    retriever = create_vectorstore_and_retriever(data)
+    if retriever is None:
+        logging.error("Failed to create retriever.")
+    else:
+        logging.info("Retriever created successfully.")
+
+    # Pass the retriever to the graph's state
+    response = graph.invoke({
+        "question": question,
+        "history": history,
+        "steps": [],
+        "retriever": retriever
+    })
+    return response["generation"], response["steps"]
+
+
+
+--- File: ./src/agent/core/config.py ---
+# Existing imports and configurations
+import logging
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
+
+# Configure logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+
+# URLs for data loading
+# TODO: Extend to other data types, Web, Discord, Telegram, YouTube, and Podcast
+DATA_URLS = [
+    "data/all_matches.json",
+]
+
+
+--- File: ./src/agent/rag/rag_chain_setup.py ---
+# src/agent/rag/rag_chain_setup.py
+
+from langchain.prompts import PromptTemplate
+from langchain_openai import ChatOpenAI
+from langchain_core.output_parsers import StrOutputParser
+
+def setup_rag_chain():
+    prompt = PromptTemplate(
+        template="""
+Eres un asistente de IA especializado en analizar y detallar conversaciones de Twitter sobre LaLiga, incluyendo equipos, partidos, traspasos, polémicas, y otros datos relevantes del fútbol. Tu tarea es proporcionar respuestas concisas e informativas basadas en los tweets y en las preguntas que se te hagan. La fecha actual es [fecha actual], por lo que asegúrate de que tus respuestas reflejen los eventos y desarrollos más recientes.
+
+Historial de conversación:
+{history}
+
+Guías:
+
+- Enfócate en extraer información clave de los tweets, como resultados de partidos, rendimiento de jugadores, actualizaciones de traspasos o polémicas recientes.
+- Si el tweet menciona jugadores, equipos, goles o estadísticas de un partido, destaca esos detalles en tu respuesta.
+- Proporciona contexto sobre el tono o la opinión del autor si es relevante para la pregunta.
+- Si la pregunta trata sobre algo que no está directamente cubierto en los tweets, menciónalo, pero ofrece un dato relevante con la información disponible si es posible.
+- Mantén tus respuestas concisas, entre tres y ocho oraciones, y utiliza la memoria del sistema para mejorar tus respuestas basadas en interacciones previas.
+- Evita repetir frases como 'Según...', sé creativo en tu forma de comunicar.
+
+Pregunta Actual:
+{question}
+
+Datos de Tweets:
+{data}
+
+Respuesta:
+""",
+        input_variables=["history", "question", "data"],
+    )
+
+    llm = ChatOpenAI(model="gpt-4", temperature=0)
+    rag_chain = prompt | llm | StrOutputParser()
+    return rag_chain

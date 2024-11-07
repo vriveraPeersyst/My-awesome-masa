@@ -25,3 +25,6 @@ TEAM_NAME_MAPPINGS = {
     'SevillaFC': ['sevilla', 'sevilla fc'],
     'valenciacf': ['valencia', 'valencia cf'],
 }
+
+
+
